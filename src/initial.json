@@ -1,0 +1,15 @@
+{
+  "data": {
+    "id": "{{guid}}",
+    "isDeleted": true,
+    "percentage": 0,
+    "createdOn": "2019-10-24T20:08:45.889Z",
+    "createdBy": "{{lastName}}",
+    "updatedOn": "2019-10-24T20:08:45.889Z",
+    "updatedBy": "{{lastName}}"
+  },
+  "version": "string",
+  "statusCode": 0,
+  "requestId": "{{guid}}",
+  "timestamp": 0
+}
