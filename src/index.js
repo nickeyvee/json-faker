@@ -1,6 +1,10 @@
 import React, { Component } from 'react';
 import { render } from 'react-dom';
 
+import { makeStyles } from '@material-ui/core/styles';
+import Paper from '@material-ui/core/Paper';
+import Grid from '@material-ui/core/Grid';
+
 import inferSchema from 'to-json-schema';
 
 import jsf from 'json-schema-faker';
@@ -8,16 +12,32 @@ import jsf from 'json-schema-faker';
 import times from 'lodash.times'
 
 import Editor from './Editor';
+import Preview from './Preview'
+
 import './style.css';
 
 jsf.extend('faker', () => require('faker'));
 
+const useStyles = makeStyles(theme => ({
+  root: {
+    flexGrow: 1,
+  },
+  paper: {
+    height: '100%',
+    padding: theme.spacing(2),
+    textAlign: 'center',
+    color: theme.palette.text.secondary,
+  },
+}));
+
 class App extends Component {
   constructor() {
     super();
+    this.classes = useStyles
     this.state = {
       name: 'React',
       value: [],
+      result: [],
       schema: null,
       items: [],
       input: 1
@@ -57,21 +77,25 @@ class App extends Component {
 
   render() {
     return (
-      <div className="editor-wrapper">
-        <button onClick={this.generate}>Generate</button>
-        <input
-          type="number"
-          onChange={this.onInput}
-        />
-        <div className="flex-container">
-          <div className="flex-item">
-            <Editor
-              onChange={this.onChange}
-              viewPortMargin={Infinity}
-              readOnly={false}           
-            />
-          </div>
-        </div>
+      <div className={this.classes.root}>
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Paper className={this.classes.paper}>
+              <Editor
+                onChange={this.onChange}
+                viewPortMargin={Infinity}
+                readOnly={false}           
+              />
+            </Paper>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Paper className={this.classes.paper}>
+              <Preview
+                defaultValue={this.state.value}
+              />
+            </Paper>
+          </Grid>
+        </Grid>
       </div>
     );
   }
