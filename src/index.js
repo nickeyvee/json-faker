@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import { render } from 'react-dom';
 
+import set from 'lodash.set'
+import get from 'lodash.get'
+
 import { makeStyles } from '@material-ui/core/styles';
 // import { withStyles } from '@material-ui/core/styles';
 
@@ -48,43 +51,65 @@ export default function App() {
     value: [],
     result: [],
     schema: null,
+    button: {
+      margin: '0 8px 0 8px'
+    },
     root: {
       flexGrow: 1,
       height: '100%',
       margin: '0'
     },
     items: [],
-    input: 1
+    repeat: 1
   });
 
-  const onChange = (input) => {
+  const onChange = (v) => {
     const postProcessFnc = (type, schema, value, defaultFunc) =>  {
       return (type === 'integer') ? {...schema, required: true} : defaultFunc(type, schema, value)
     }
 
+    const re = /\{\{((?!\}\})(.|\n))*\}\}/g
+
     const options = {
-      // postProcessFnc,
       objects: {
-        postProcessFnc: (schema, obj, defaultFnc) => ({
-          ...defaultFnc(schema, obj), required: Object.getOwnPropertyNames(obj)
-        })
+        postProcessFnc: (schema, obj, defaultFnc) => {
+
+          // console.log(schema)
+
+          Object.keys(obj).forEach((key) => {
+            const a = get(obj, key)
+            const b = typeof a === 'string' ? a.match(re) : null
+            
+            if (b && b[0] && b[0]) {
+              const c = b[0].slice(2, -2)
+
+              set(schema, ['properties', key, 'faker'], c)
+            }
+            // Pass template variable in here ^^^^^^^^^^^^
+            // console.log(schema.properties[key])
+          })
+          
+          return ({
+            ...defaultFnc(schema, obj),
+            required: Object.getOwnPropertyNames(obj)
+          })
+        }
       }
     };
 
-    const schema = inferSchema(input, options)
-    console.log(schema)
-    setState({ ...state, input, schema })
+    const schema = inferSchema(v, options)
+    // console.log(schema)
+    setState({ ...state, schema })
   }
 
   const onInput = ({ currentTarget: { value } }) => {
-    console.log(value)
-    setState({ ...state, input: value ? parseInt(value) : 1 })
+    setState({ ...state, repeat: value ? parseInt(value) : 1 })
   }
 
   const generate = async () => {
-    const { schema, input, items } = state
+    const { schema, repeat, items } = state
 
-    await setState({ ...state, items: times(input, () => jsf.generate(schema)) })
+    await setState({ ...state, items: times(repeat, () => jsf.generate(schema)) })
   }
 
   const toggleDrawer = (side, open) => event => {
@@ -127,32 +152,29 @@ export default function App() {
       <Drawer open={state.left} onClose={toggleDrawer('left', false)}>
         {sideList('left')}
       </Drawer>
-      <Grid
-        container
-        spacing={1}
-      >
-        <Grid
-          item
-          xs={12}
-        >
-          <Button
-            onClick={toggleDrawer('left', true)}
-          >Open Left</Button>
-          <Button
-           onClick={generate}
-          >Generate</Button>
-          <TextField
-            onChange={onInput}
-            variant="outlined"
-            size="small"
-          />
+      <Grid container spacing={1}>
+        <Grid item xs={12}>
+          <Grid container spacing={1}>
+            <Grid item xs={10} sm={3}>
+              <Button
+                style={state.button}
+                onClick={toggleDrawer('left', true)}
+              >Open Left</Button>
+              <Button
+                style={state.button}
+                onClick={generate}
+              >Generate</Button>
+            </Grid>
+            <Grid item xs={2}>
+              <TextField
+                onChange={onInput}
+                variant="outlined"
+                size="small"
+              />
+            </Grid>
+          </Grid>
         </Grid>
-        <Grid
-          item
-          xs={12}
-          sm={6}
-          style={{ height: '89vh' }}
-        >
+        <Grid item xs={12} sm={6} style={{ height: '89vh' }}>
           <Paper>
             <Editor
               onChange={onChange}
@@ -161,16 +183,9 @@ export default function App() {
             />
           </Paper>
         </Grid>
-        <Grid
-          item
-          xs={12}
-          sm={6}
-          style={{ height: '89vh' }}
-        >
+        <Grid item xs={12} sm={6} style={{ height: '89vh' }}>
           <Paper style={state.root}>
-            <Preview
-              defaultValue={state.items}
-            />
+            <Preview defaultValue={state.items}/>
           </Paper>
         </Grid>
       </Grid>

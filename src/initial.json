@@ -1,15 +1,15 @@
 {
   "data": {
-    "id": "{{guid}}",
+    "id": "{{random.uuid}}",
     "isDeleted": true,
     "percentage": 0,
     "createdOn": "2019-10-24T20:08:45.889Z",
-    "createdBy": "{{lastName}}",
+    "createdBy": "{{name.lastName}}",
     "updatedOn": "2019-10-24T20:08:45.889Z",
-    "updatedBy": "{{lastName}}"
+    "updatedBy": "{{name.lastName}}"
   },
-  "version": "string",
-  "statusCode": 0,
-  "requestId": "{{guid}}",
+  "version": "{{random.number}}",
+  "statusCode": "{{random.number}}",
+  "requestId": "{{random.uuid}}",
   "timestamp": 0
 }
