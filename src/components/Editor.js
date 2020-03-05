@@ -6,7 +6,7 @@ import 'codemirror/addon/lint/lint.css';
 // eslint-disable-next-line import/first
 import 'codemirror/addon/lint/lint';
 
-import initial from './initial.json'
+import initial from '../initial.json'
 
 import './Editor.css';
 

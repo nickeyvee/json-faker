@@ -1,8 +1,9 @@
-import React, { Component } from 'react';
+import React, { Component, useEffect } from 'react';
 import { render } from 'react-dom';
 
 import set from 'lodash.set'
 import get from 'lodash.get'
+import times from 'lodash.times'
 
 import { makeStyles } from '@material-ui/core/styles';
 // import { withStyles } from '@material-ui/core/styles';
@@ -23,13 +24,13 @@ import InboxIcon from '@material-ui/icons/MoveToInbox';
 import MailIcon from '@material-ui/icons/Mail';
 
 import inferSchema from 'to-json-schema';
-
 import jsf from 'json-schema-faker';
 
-import times from 'lodash.times'
+import Editor from './components/Editor';
+import Preview from './components/Preview'
 
-import Editor from './Editor';
-import Preview from './Preview'
+import http from './api/baseHttp.js'
+import auth from './api/auth.js'
 
 import './style.css';
 
@@ -46,11 +47,13 @@ jsf.extend('faker', () => require('faker'));
 
 export default function App() {
   const classes = useStyles();
+
   const [state, setState] = React.useState({
     name: 'React',
     value: [],
     result: [],
     schema: null,
+    schemas: [],
     button: {
       margin: '0 8px 0 8px'
     },
@@ -97,9 +100,13 @@ export default function App() {
       }
     };
 
-    const schema = inferSchema(v, options)
-    // console.log(schema)
-    setState({ ...state, schema })
+    try {
+      const schema = inferSchema(v, options)
+          // console.log(schema)
+      setState({ ...state, schema })
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   const onInput = ({ currentTarget: { value } }) => {
@@ -116,36 +123,36 @@ export default function App() {
     if (event && event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
       return;
     }
-
     setState({ ...state, [side]: open });
   };
 
-  const sideList = side => (
-    <div
-      className={classes.list}
-      role="presentation"
-      onClick={toggleDrawer(side, false)}
-      onKeyDown={toggleDrawer(side, false)}
-    >
-      <List>
-        {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
-          <ListItem button key={text}>
-            <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-            <ListItemText primary={text} />
-          </ListItem>
-        ))}
-      </List>
-      <Divider />
-      <List>
-        {['All mail', 'Trash', 'Spam'].map((text, index) => (
-          <ListItem button key={text}>
-            <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-            <ListItemText primary={text} />
-          </ListItem>
-        ))}
-      </List>
-    </div>
-  );
+  const sideList = (side) => {
+    return (
+      <div
+        className={classes.list}
+        role="presentation"
+        onClick={toggleDrawer(side, false)}
+        onKeyDown={toggleDrawer(side, false)}
+      >
+        <List>
+          {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
+            <ListItem button key={text}>
+              <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
+              <ListItemText primary={text} />
+            </ListItem>
+          ))}
+        </List>
+        <Divider />
+        <List>
+          {['All mail', 'Trash', 'Spam'].map((text, index) => (
+            <ListItem button key={text}>
+              <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
+              <ListItemText primary={text} />
+            </ListItem>
+          ))}
+        </List>
+      </div>
+    )};
 
   return (
     <div style={{ height: '100%' }}>
@@ -154,8 +161,8 @@ export default function App() {
       </Drawer>
       <Grid container spacing={1}>
         <Grid item xs={12}>
-          <Grid container spacing={1}>
-            <Grid item xs={10} sm={3}>
+          <Grid container spacing={1} justify="space-between">
+            <Grid item xs={10} sm={5}>
               <Button
                 style={state.button}
                 onClick={toggleDrawer('left', true)}
@@ -164,14 +171,18 @@ export default function App() {
                 style={state.button}
                 onClick={generate}
               >Generate</Button>
-            </Grid>
-            <Grid item xs={2}>
               <TextField
                 onChange={onInput}
                 variant="outlined"
                 size="small"
-              />
+              />              
             </Grid>
+            <Button
+              style={state.button}
+              href="/auth/github"
+              className="auth-btn"
+              variant="outlined"
+            >Login with Github</Button>                
           </Grid>
         </Grid>
         <Grid item xs={12} sm={6} style={{ height: '89vh' }}>
