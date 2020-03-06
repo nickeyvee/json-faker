@@ -1,4 +1,4 @@
-import React, { Component, useEffect } from 'react';
+import React from 'react';
 import { render } from 'react-dom';
 
 import set from 'lodash.set'
@@ -13,7 +13,6 @@ import { TextField, Button } from '@material-ui/core';
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 
-import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
 import Drawer from '@material-ui/core/Drawer';
 import List from '@material-ui/core/List';
 import Divider from '@material-ui/core/Divider';
@@ -29,8 +28,7 @@ import jsf from 'json-schema-faker';
 import Editor from './components/Editor';
 import Preview from './components/Preview'
 
-import http from './api/baseHttp.js'
-import auth from './api/auth.js'
+import DataProvider from './components/DataProvider'
 
 import './style.css';
 
@@ -45,15 +43,15 @@ const useStyles = makeStyles({
 
 jsf.extend('faker', () => require('faker'));
 
-export default function App() {
+export function App(props) {
   const classes = useStyles();
-
   const [state, setState] = React.useState({
     name: 'React',
     value: [],
     result: [],
     schema: null,
     schemas: [],
+    templates: [],
     button: {
       margin: '0 8px 0 8px'
     },
@@ -67,22 +65,16 @@ export default function App() {
   });
 
   const onChange = (v) => {
-    const postProcessFnc = (type, schema, value, defaultFunc) =>  {
-      return (type === 'integer') ? {...schema, required: true} : defaultFunc(type, schema, value)
-    }
-
     const re = /\{\{((?!\}\})(.|\n))*\}\}/g
 
     const options = {
       objects: {
         postProcessFnc: (schema, obj, defaultFnc) => {
 
-          // console.log(schema)
-
           Object.keys(obj).forEach((key) => {
             const a = get(obj, key)
             const b = typeof a === 'string' ? a.match(re) : null
-            
+
             if (b && b[0] && b[0]) {
               const c = b[0].slice(2, -2)
 
@@ -91,7 +83,7 @@ export default function App() {
             // Pass template variable in here ^^^^^^^^^^^^
             // console.log(schema.properties[key])
           })
-          
+
           return ({
             ...defaultFnc(schema, obj),
             required: Object.getOwnPropertyNames(obj)
@@ -154,6 +146,29 @@ export default function App() {
       </div>
     )};
 
+  const logout = () => (
+    <Button
+     variant="outlined"
+     href="/auth/logout"
+     className="auth-btn"
+   >
+     Logout
+   </Button>
+  )
+
+  const login = () => (
+    <Button
+      style={state.button}
+      href="/auth/github"
+      className="auth-btn"
+      variant="outlined"
+    >
+      Login with Github
+    </Button>
+  )
+
+  console.log(props)
+
   return (
     <div style={{ height: '100%' }}>
       <Drawer open={state.left} onClose={toggleDrawer('left', false)}>
@@ -175,14 +190,9 @@ export default function App() {
                 onChange={onInput}
                 variant="outlined"
                 size="small"
-              />              
+              />
             </Grid>
-            <Button
-              style={state.button}
-              href="/auth/github"
-              className="auth-btn"
-              variant="outlined"
-            >Login with Github</Button>                
+            {props.user ? logout() : login()}
           </Grid>
         </Grid>
         <Grid item xs={12} sm={6} style={{ height: '89vh' }}>
@@ -190,7 +200,7 @@ export default function App() {
             <Editor
               onChange={onChange}
               viewPortMargin={Infinity}
-              readOnly={false}           
+              readOnly={false}
             />
           </Paper>
         </Grid>
@@ -204,4 +214,6 @@ export default function App() {
   );
 }
 
-render(<App />, document.getElementById('root'));
+const Wrapped = new DataProvider(App);
+
+render(<Wrapped />, document.getElementById('root'));
